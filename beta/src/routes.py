@@ -10,7 +10,8 @@ from crud_books_static import (
     add_book_static,
     get_book_static,
     update_book_static,
-    delete_book_static
+    delete_book_static,
+    get_all_books_static
 )
 
 
@@ -117,6 +118,21 @@ def setup_routes(app):
         return jsonify({"message": "Failed to delete book"}), 400
 
     # Static resources specific routes
+    @app.route('/books/static', methods=['GET'])
+    def get_all_books_static_route():
+        static_data = get_all_books_static()
+        if not static_data:
+            return jsonify([]), 200
+        
+        result = []
+        for data in static_data:
+            result.append({
+                "books_id": data[0],
+                "picture_url": data[1],
+                "download_url": data[2]
+            })
+        return jsonify(result), 200
+
     @app.route('/books/static/add/<int:books_id>', methods=['POST'])
     def add_book_static_route(books_id):
         data = request.json

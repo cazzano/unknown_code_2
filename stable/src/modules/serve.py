@@ -238,4 +238,4 @@ def internal_error(error):
 
 
 if __name__ == '__main__':
-    app.run(debug=False)  # Set debug=False for production
+    app.run(debug=False, port=3000)  # Set debug=False for production
