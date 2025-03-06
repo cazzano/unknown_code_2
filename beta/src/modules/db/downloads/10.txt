@@ -1,3 +1,0 @@
-hyprland
-pyprland
-sudo pacman -S hyprland-git --overwrite '/usr/share/xdg-desktop-portal/hyprland-portals.conf'

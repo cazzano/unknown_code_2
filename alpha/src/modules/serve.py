@@ -125,15 +125,41 @@ def handle_file_operation(folder, operation, filename=None, file=None, book_id=N
             }), 200 if operation == 'update' else 201
 
         elif operation == 'delete':
-            if not filename:
-                return jsonify({'error': 'Filename not provided'}), 400
+            if filename:
+                # Original method - delete by filename
+                file_path = os.path.join(folder, secure_filename(filename))
+                if not os.path.exists(file_path):
+                    return jsonify({'error': 'File not found'}), 404
 
-            file_path = os.path.join(folder, secure_filename(filename))
-            if not os.path.exists(file_path):
-                return jsonify({'error': 'File not found'}), 404
+                os.remove(file_path)
+                return jsonify({'message': 'File deleted successfully'}), 200
 
-            os.remove(file_path)
-            return jsonify({'message': 'File deleted successfully'}), 200
+            elif book_id:
+                # New method - delete all files with matching book_id
+                deleted_files = []
+                not_found = True
+
+                # Get all files in the directory
+                files = os.listdir(folder)
+
+                # Iterate through files to find matching book_id
+                for file in files:
+                    # Check if filename starts with book_id followed by a dot
+                    if file.startswith(f"{book_id}."):
+                        not_found = False
+                        file_path = os.path.join(folder, file)
+                        os.remove(file_path)
+                        deleted_files.append(file)
+
+                if not_found:
+                    return jsonify({'error': f'No files found for book_id {book_id}'}), 404
+
+                return jsonify({
+                    'message': 'Files deleted successfully',
+                    'deleted_files': deleted_files
+                }), 200
+            else:
+                return jsonify({'error': 'Neither filename nor book_id provided'}), 400
 
     except Exception as e:
         logger.error(f"Error in file operation: {e}")
@@ -176,7 +202,22 @@ def handle_pictures():
         )
 
     elif request.method == 'DELETE':
-        return handle_file_operation(PICTURES_FOLDER, 'delete', filename=request.args.get('filename'))
+        # Check for book_id first, then fall back to filename
+        book_id = request.args.get('book_id')
+        filename = request.args.get('filename')
+
+        if book_id:
+            return handle_file_operation(
+                PICTURES_FOLDER,
+                'delete',
+                book_id=book_id
+            )
+        else:
+            return handle_file_operation(
+                PICTURES_FOLDER,
+                'delete',
+                filename=filename
+            )
 
     elif request.method == 'PUT':
         book_id = request.args.get('book_id')
@@ -207,7 +248,22 @@ def handle_downloads():
         )
 
     elif request.method == 'DELETE':
-        return handle_file_operation(DOWNLOADS_FOLDER, 'delete', filename=request.args.get('filename'))
+        # Check for book_id first, then fall back to filename
+        book_id = request.args.get('book_id')
+        filename = request.args.get('filename')
+
+        if book_id:
+            return handle_file_operation(
+                DOWNLOADS_FOLDER,
+                'delete',
+                book_id=book_id
+            )
+        else:
+            return handle_file_operation(
+                DOWNLOADS_FOLDER,
+                'delete',
+                filename=filename
+            )
 
     elif request.method == 'PUT':
         book_id = request.args.get('book_id')
